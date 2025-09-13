@@ -11,7 +11,7 @@ from agentless.util.preprocess_data import (
     show_project_structure,
 )
 
-MAX_CONTEXT_LENGTH = 128000
+MAX_CONTEXT_LENGTH = 122000
 
 
 class FL(ABC):

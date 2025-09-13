@@ -257,7 +257,7 @@ class EmbeddingIndex(ABC):
                 )  # embedding dimension does not matter for mocking.
                 Settings.callback_manager = CallbackManager([token_counter])
             else:
-                embed_model = OpenAIEmbedding(model_name="text-embedding-3-small")
+                embed_model = OpenAIEmbedding(model_name="text-embedding-3-small", api_base="https://ssvip.dmxapi.com/v1")
             index = VectorStoreIndex.from_documents(documents, embed_model=embed_model)
             index.storage_context.persist(persist_dir=persist_dir)
         else:

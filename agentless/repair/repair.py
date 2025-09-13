@@ -535,7 +535,12 @@ def repair(args):
     with open(f"{args.output_folder}/args.json", "w") as f:
         json.dump(vars(args), f, indent=4)
 
-    swe_bench_data = load_dataset(args.dataset, split="test")
+    if args.dataset.endswith(".json"):
+        with open(args.dataset, "r") as f:
+            swe_bench_data = json.load(f)
+    else:
+        swe_bench_data = load_dataset(args.dataset, split="test")
+
     locs = load_jsonl(args.loc_file)
     prev_o = load_jsonl(args.output_file) if os.path.exists(args.output_file) else []
 
@@ -585,7 +590,7 @@ def post_process_raw_output(
 
         git_diff = fake_git_repo("playground", edited_files, contents, new_contents)
 
-        raw_git_diffs += "\n" + git_diff.replace("\ No newline at end of file\n", "")
+        raw_git_diffs += "\n" + git_diff.replace("\\ No newline at end of file\n", "")
 
         syntax_success = check_syntax(new_contents)
 
@@ -749,7 +754,7 @@ def main():
         default="gpt-4o-2024-05-13",
         choices=[
             "gpt-4o-2024-05-13",
-            "deepseek-coder",
+            "deepseek-chat",
             "gpt-4o-mini-2024-07-18",
             "claude-3-5-sonnet-20241022",
         ],
@@ -783,7 +788,7 @@ def main():
         "--dataset",
         type=str,
         default="princeton-nlp/SWE-bench_Lite",
-        choices=["princeton-nlp/SWE-bench_Lite", "princeton-nlp/SWE-bench_Verified"],
+        # choices=["princeton-nlp/SWE-bench_Lite", "princeton-nlp/SWE-bench_Verified"],
     )
 
     args = parser.parse_args()

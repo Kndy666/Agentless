@@ -396,12 +396,19 @@ def localize_instance(
 
 
 def localize_irrelevant(args):
-    swe_bench_data = load_dataset(args.dataset, split="test")
+    # 支持本地 json 数据集
+    if args.dataset.endswith(".json"):
+        with open(args.dataset, "r") as f:
+            swe_bench_data = json.load(f)
+    else:
+        swe_bench_data = load_dataset(args.dataset, split="test")
     existing_instance_ids = (
         load_existing_instance_ids(args.output_file) if args.skip_existing else set()
     )
     if args.num_threads == 1:
         for bug in tqdm(swe_bench_data, colour="MAGENTA"):
+            if not bug.get("FAIL_TO_PASS"):
+                continue
             localize_irrelevant_instance(
                 bug, args, swe_bench_data, existing_instance_ids
             )
@@ -419,18 +426,23 @@ def localize_irrelevant(args):
                     existing_instance_ids,
                     write_lock,
                 )
-                for bug in swe_bench_data
+                for bug in swe_bench_data if bug.get("FAIL_TO_PASS")
             ]
             for future in tqdm(
                 concurrent.futures.as_completed(futures),
-                total=len(swe_bench_data),
+                total=len([bug for bug in swe_bench_data if bug.get("FAIL_TO_PASS")]),
                 colour="MAGENTA",
             ):
                 future.result()
 
 
 def localize(args):
-    swe_bench_data = load_dataset(args.dataset, split="test")
+    # 支持本地 json 数据集
+    if args.dataset.endswith(".json"):
+        with open(args.dataset, "r") as f:
+            swe_bench_data = json.load(f)
+    else:
+        swe_bench_data = load_dataset(args.dataset, split="test")
     start_file_locs = load_jsonl(args.start_file) if args.start_file else None
     existing_instance_ids = (
         load_existing_instance_ids(args.output_file) if args.skip_existing else set()
@@ -438,6 +450,8 @@ def localize(args):
 
     if args.num_threads == 1:
         for bug in tqdm(swe_bench_data, colour="MAGENTA"):
+            if not bug.get("FAIL_TO_PASS"):
+                continue
             localize_instance(
                 bug, args, swe_bench_data, start_file_locs, existing_instance_ids
             )
@@ -456,11 +470,11 @@ def localize(args):
                     existing_instance_ids,
                     write_lock,
                 )
-                for bug in swe_bench_data
+                for bug in swe_bench_data if bug.get("FAIL_TO_PASS")
             ]
             for future in tqdm(
                 concurrent.futures.as_completed(futures),
-                total=len(swe_bench_data),
+                total=len([bug for bug in swe_bench_data if bug.get("FAIL_TO_PASS")]),
                 colour="MAGENTA",
             ):
                 future.result()
@@ -574,7 +588,7 @@ def main():
         default="gpt-4o-2024-05-13",
         choices=[
             "gpt-4o-2024-05-13",
-            "deepseek-coder",
+            "deepseek-chat",
             "gpt-4o-mini-2024-07-18",
             "claude-3-5-sonnet-20241022",
         ],
@@ -589,7 +603,7 @@ def main():
         "--dataset",
         type=str,
         default="princeton-nlp/SWE-bench_Lite",
-        choices=["princeton-nlp/SWE-bench_Lite", "princeton-nlp/SWE-bench_Verified"],
+        # choices=["princeton-nlp/SWE-bench_Lite", "princeton-nlp/SWE-bench_Verified"],
         help="Current supported dataset for evaluation",
     )
 

@@ -8,21 +8,6 @@ import uuid
 import pandas as pd
 from tqdm import tqdm
 
-repo_to_top_folder = {
-    "django/django": "django",
-    "sphinx-doc/sphinx": "sphinx",
-    "scikit-learn/scikit-learn": "scikit-learn",
-    "sympy/sympy": "sympy",
-    "pytest-dev/pytest": "pytest",
-    "matplotlib/matplotlib": "matplotlib",
-    "astropy/astropy": "astropy",
-    "pydata/xarray": "xarray",
-    "mwaskom/seaborn": "seaborn",
-    "psf/requests": "requests",
-    "pylint-dev/pylint": "pylint",
-    "pallets/flask": "flask",
-}
-
 
 def checkout_commit(repo_path, commit_id):
     """Checkout the specified commit in the given local git repository.
@@ -45,14 +30,14 @@ def clone_repo(repo_name, repo_playground):
     try:
 
         print(
-            f"Cloning repository from https://github.com/{repo_name}.git to {repo_playground}/{repo_to_top_folder[repo_name]}..."
+            f"Cloning repository from https://github.com/{repo_name}.git to {repo_playground}/{repo_name.split('/')[0]}..."
         )
         subprocess.run(
             [
                 "git",
                 "clone",
                 f"https://github.com/{repo_name}.git",
-                f"{repo_playground}/{repo_to_top_folder[repo_name]}",
+                f"{repo_playground}/{repo_name.split('/')[0]}",
             ],
             check=True,
         )
@@ -77,11 +62,11 @@ def get_project_structure_from_scratch(
     os.makedirs(repo_playground)
 
     clone_repo(repo_name, repo_playground)
-    checkout_commit(f"{repo_playground}/{repo_to_top_folder[repo_name]}", commit_id)
-    structure = create_structure(f"{repo_playground}/{repo_to_top_folder[repo_name]}")
+    checkout_commit(f"{repo_playground}/{repo_name.split('/')[0]}", commit_id)
+    structure = create_structure(f"{repo_playground}/{repo_name.split('/')[0]}")
     # clean up
     subprocess.run(
-        ["rm", "-rf", f"{repo_playground}/{repo_to_top_folder[repo_name]}"], check=True
+        ["rm", "-rf", f"{repo_playground}/{repo_name.split('/')[0]}"], check=True
     )
     d = {
         "repo": repo_name,

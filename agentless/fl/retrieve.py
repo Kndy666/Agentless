@@ -97,11 +97,18 @@ def retrieve(args):
     else:
         found_files = []
 
-    swe_bench_data = load_dataset(args.dataset, split="test")
+    if args.dataset.endswith(".json"):
+        with open(args.dataset, "r") as f:
+            swe_bench_data = json.load(f)
+    else:
+        swe_bench_data = load_dataset(args.dataset, split="test")
+
     prev_o = load_jsonl(args.output_file) if os.path.exists(args.output_file) else []
 
     if args.num_threads == 1:
         for bug in tqdm(swe_bench_data, colour="MAGENTA"):
+            if not bug.get("FAIL_TO_PASS"):
+                continue
             retrieve_locs(
                 bug, args, swe_bench_data, found_files, prev_o, write_lock=None
             )
@@ -120,11 +127,11 @@ def retrieve(args):
                     prev_o,
                     write_lock,
                 )
-                for bug in swe_bench_data
+                for bug in swe_bench_data if bug.get("FAIL_TO_PASS")
             ]
             for _ in tqdm(
                 concurrent.futures.as_completed(futures),
-                total=len(swe_bench_data),
+                total=len([bug for bug in swe_bench_data if bug.get("FAIL_TO_PASS")]),
                 colour="MAGENTA",
             ):
                 pass
@@ -158,7 +165,7 @@ def main():
         "--dataset",
         type=str,
         default="princeton-nlp/SWE-bench_Lite",
-        choices=["princeton-nlp/SWE-bench_Lite", "princeton-nlp/SWE-bench_Verified"],
+        # choices=["princeton-nlp/SWE-bench_Lite", "princeton-nlp/SWE-bench_Verified"],
     )
 
     args = parser.parse_args()
